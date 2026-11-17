@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asistente comunitario de Tumaco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F5F3;
+    --surface: #FFFFFF;
+    --ink: #14231F;
+    --muted: #46594F;
+    --line: #C9D6D0;
+    --primary: #1F5A48;
+    --primary-ink: #FFFFFF;
+    --accent: #0E6C7C;
+    --soft: #E4EFEA;
+    --warn-bg: #FFF1CF;
+    --warn-ink: #4D3200;
+    --focus: #0E6C7C;
+    --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1A17;
+      --surface: #16251F;
+      --ink: #E7F0EC;
+      --muted: #A9BDB5;
+      --line: #2C423B;
+      --primary: #63C7A3;
+      --primary-ink: #08150F;
+      --accent: #72C6D4;
+      --soft: #1D332B;
+      --warn-bg: #3A2D0E;
+      --warn-ink: #F6DA93;
+      --focus: #72C6D4;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.25rem; line-height: 1.25; margin: 0 0 8px; }
+  h3 { font-size: 1.05rem; margin: 0 0 4px; }
+  p { margin: 0 0 12px; }
+  .lead { color: var(--muted); margin-bottom: 16px; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+  .tab {
+    font: inherit; font-weight: 700; font-size: 0.95rem;
+    padding: 12px 8px; min-height: 56px;
+    border: 2px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink); cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+  .panel[hidden] { display: none; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 12px 14px; margin: 14px 0; font-size: 0.95rem; }
+
+  fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+  legend { font-weight: 700; margin-bottom: 8px; padding: 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px; margin-bottom: 8px; min-height: 56px;
+    border: 2px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer;
+  }
+  .opt input { margin-top: 5px; width: 20px; height: 20px; accent-color: var(--primary); flex: none; }
+  .opt:has(input:checked) { border-color: var(--primary); background: var(--soft); }
+  .opt small { display: block; color: var(--muted); font-size: 0.85rem; }
+
+  .meta { margin-bottom: 12px; }
+  .meta dt { font-weight: 700; font-size: 0.9rem; color: var(--muted); margin-top: 8px; }
+  .meta dd { margin: 0; }
+
+  .paper {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 14px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-height: 420px;
+    overflow: auto;
+    margin: 0 0 12px;
+    font-family: var(--font);
+  }
+  .btn {
+    font: inherit; font-weight: 700;
+    padding: 12px 18px; min-height: 52px; width: 100%;
+    border: 0; border-radius: 10px;
+    background: var(--primary); color: var(--primary-ink); cursor: pointer;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border: 2px solid var(--line); margin-top: 8px; }
+  .status { min-height: 1.4em; margin: 8px 0 0; font-weight: 700; color: var(--primary); }
+
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
+  summary { cursor: pointer; padding: 14px 16px; font-weight: 700; min-height: 52px; list-style-position: inside; }
+  details[open] summary { border-bottom: 1px solid var(--line); }
+  .detail-body { padding: 12px 16px 14px; }
+  .detail-body a { color: var(--accent); font-weight: 700; word-break: break-all; }
+
+  ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+  ol.steps li {
+    counter-increment: step; position: relative;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 14px 14px 58px; margin-bottom: 10px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute; left: 14px; top: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary); color: var(--primary-ink);
+    display: grid; place-items: center; font-weight: 700;
+  }
+  ol.steps label { display: flex; gap: 10px; align-items: center; margin-top: 8px; font-size: 0.9rem; color: var(--muted); cursor: pointer; }
+  ol.steps input { width: 20px; height: 20px; accent-color: var(--primary); }
+  ol.steps li:has(input:checked) { background: var(--soft); }
+
+  footer { margin-top: 24px; font-size: 0.85rem; color: var(--muted); }
+  @media (min-width: 560px) { .tab { font-size: 1.05rem; } .btn { width: auto; } .btn.secondary { margin-left: 8px; margin-top: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Asistente comunitario de Tumaco</h1>
+    <p class="lead">Una guía sencilla para reclamar derechos por escrito, saber a quién acudir y vigilar una obra. Esta página no pide, guarda ni envía datos personales.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Módulos">
+    <button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true">Pedir algo por escrito</button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false">A quién acudir</button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false">Crear una veeduría</button>
+  </div>
+
+  <!-- MÓDULO 1 -->
+  <section class="panel" id="panel-1" role="tabpanel" aria-labelledby="tab-1">
+    <h2>Derecho de petición</h2>
+    <p class="lead">Es su derecho a pedir información o una solución a una entidad pública (artículo 23 de la Constitución). Escoja su necesidad y copie la carta. Complete los datos entre corchetes en su celular, no en esta página.</p>
+
+    <fieldset>
+      <legend>¿Qué necesita pedir?</legend>
+      <div id="needs"></div>
+    </fieldset>
+
+    <div id="result" hidden>
+      <div class="card">
+        <dl class="meta">
+          <dt>Se envía a</dt><dd id="r-dest"></dd>
+          <dt>Plazo de respuesta</dt><dd>15 días hábiles (Ley 1755 de 2015). Si pide documentos, 10 días hábiles.</dd>
+          <dt>Si no responden</dt><dd id="r-next"></dd>
+        </dl>
+      </div>
+      <pre class="paper" id="paper" tabindex="0" aria-label="Carta de derecho de petición"></pre>
+      <button class="btn" id="copy" type="button">Copiar carta</button>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="notice" id="r-tip"></div>
+    </div>
+    <div class="notice">Es una plantilla informativa. Revísela y adáptela a su caso. Esta página no envía la carta: usted la radica por sus propios medios.</div>
+  </section>
+
+  <!-- MÓDULO 2 -->
+  <section class="panel" id="panel-2" role="tabpanel" aria-labelledby="tab-2" hidden>
+    <h2>A quién acudir</h2>
+    <p class="lead">Cada entidad tiene una función. Toque una para ver cuándo acudir. Los teléfonos y direcciones cambian, por eso aquí solo ponemos las páginas oficiales.</p>
+    <div id="routes"></div>
+    <div class="notice">Si usted o alguien cercano está en peligro, busque de inmediato a la Policía, la Personería o la Defensoría del Pueblo. No publique ni comparta en redes nombres de líderes, víctimas o habitantes del territorio.</div>
+  </section>
+
+  <!-- MÓDULO 3 -->
+  <section class="panel" id="panel-3" role="tabpanel" aria-labelledby="tab-3" hidden>
+    <h2>Cómo crear una veeduría ciudadana</h2>
+    <p class="lead">Una veeduría es un grupo de ciudadanos que vigila que una obra o un servicio público se cumpla (artículo 270 de la Constitución; Leyes 850 de 2003 y 1757 de 2015). No es un cargo pagado ni necesita permiso del gobierno. Puede marcar cada paso a medida que avanza.</p>
+    <ol class="steps" id="steps"></ol>
+    <button class="btn secondary" id="go-obra" type="button">Ver plantilla para pedir información de una obra</button>
+  </section>
+
+  <footer>
+    Material del proyecto «Tumaco: tierra, coca y democracia» · Curso Constitución, Paz y Democracia. Guía informativa: no reemplaza a un abogado, a la Personería ni a la Defensoría del Pueblo.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NEEDS = [
+    {
+      id: "agua",
+      label: "Agua potable",
+      hint: "No hay agua potable o el servicio no es continuo",
+      dest: "La Alcaldía de San Andrés de Tumaco y la empresa prestadora del servicio de acueducto",
+      asunto: "Acceso a agua potable en [VEREDA, BARRIO O CORREGIMIENTO].",
+      hechos: [
+        "En [VEREDA, BARRIO O CORREGIMIENTO] no tenemos acceso continuo a agua potable desde [FECHA APROXIMADA].",
+        "[DESCRIBA CÓMO LES AFECTA: salud, escuela, gastos para comprar agua].",
+        "[SI YA PIDIERON ANTES, ESCRIBA LA FECHA Y LA RESPUESTA]."
+      ],
+      peticiones: [
+        "Informar el estado actual del servicio de agua en [VEREDA, BARRIO O CORREGIMIENTO] y las razones por las que no es continuo.",
+        "Informar si existe un proyecto para ampliar o mejorar el servicio, con responsable, recursos y cronograma.",
+        "Indicar qué medidas inmediatas se tomarán mientras se ejecuta la solución definitiva."
+      ],
+      next: "Puede presentar una acción de tutela (artículo 86) si la falta de agua afecta su vida digna o su salud. Si el problema es de toda la comunidad, puede considerar una acción popular (artículo 88). La Personería o la Defensoría del Pueblo lo orientan gratis.",
+      tip: "Si varias familias tienen el mismo problema, pueden enviar una sola carta firmada por la junta de acción comunal o por una persona que las represente."
+    },
+    {
+      id: "via",
+      label: "Vía en mal estado",
+      hint: "Camino, carretera o puente que impide sacar los productos",
+      dest: "La Alcaldía de San Andrés de Tumaco (dependencia de planeación o infraestructura), con copia a la Agencia de Renovación del Territorio (ART)",
+      asunto: "Mejoramiento de la vía [NOMBRE O TRAMO: de ____ a ____].",
+      hechos: [
+        "La vía [NOMBRE O TRAMO] está en mal estado y [DESCRIBA: no se puede transitar en invierno, no pasa el transporte escolar, se pierde la cosecha].",
+        "Para sacar [CACAO, COCO, PLÁTANO U OTRO PRODUCTO] debemos [DESCRIBA LA DIFICULTAD O EL COSTO EXTRA]."
+      ],
+      peticiones: [
+        "Informar si la vía hace parte del inventario vial del municipio y si está incluida en las iniciativas del PDET de la subregión Pacífico y Frontera Nariñense.",
+        "Informar si existe un proyecto para su mejoramiento, con entidad responsable, recursos y cronograma.",
+        "Indicar qué mantenimiento se hará mientras tanto y cómo puede la comunidad participar en el seguimiento."
+      ],
+      next: "Pueden organizar una veeduría ciudadana (pestaña «Crear una veeduría») para seguir el proyecto. Si hay una orden clara de una norma o de un acto administrativo que no se cumple, puede evaluarse una acción de cumplimiento (artículo 87).",
+      tip: "Ayuda mucho adjuntar fotos de la vía (sin personas) y la fecha en que fueron tomadas."
+    },
+    {
+      id: "tierra",
+      label: "Tierra o territorio colectivo",
+      hint: "Titulación, formalización o ampliación de un territorio",
+      dest: "La Agencia Nacional de Tierras (ANT)",
+      asunto: "Estado de la solicitud de formalización o titulación de tierras.",
+      hechos: [
+        "El [FECHA] se radicó la solicitud de [FORMALIZACIÓN DE UN PREDIO / TITULACIÓN COLECTIVA / AMPLIACIÓN] con el número de radicado [NÚMERO, SI LO TIENE].",
+        "Hasta hoy no hemos recibido información sobre el avance del trámite."
+      ],
+      peticiones: [
+        "Informar en qué etapa se encuentra el trámite y qué entidad está a cargo.",
+        "Informar qué documentos o pasos faltan y la fecha estimada de decisión.",
+        "Entregar copia de los informes o actos del trámite que se puedan conocer."
+      ],
+      next: "Si hay demora sin justificación, puede acudir a una acción de tutela por vulneración del debido proceso. Si ya existe una orden legal o administrativa de titular que no se cumple, puede evaluarse una acción de cumplimiento (artículo 87).",
+      tip: "Si la solicitud es de un consejo comunitario o de un resguardo, la carta debe ir firmada por su representante legal."
+    },
+    {
+      id: "educacion",
+      label: "Educación",
+      hint: "Transporte escolar, colegio o formación técnica",
+      dest: "La Secretaría de Educación que corresponda a Tumaco (municipal o departamental)",
+      asunto: "Acceso a educación en [VEREDA, BARRIO O CORREGIMIENTO].",
+      hechos: [
+        "En [VEREDA, BARRIO O CORREGIMIENTO] los niños y jóvenes [DESCRIBA: no tienen transporte escolar, no hay educación media o técnica, la escuela necesita arreglos].",
+        "Esto hace que [DESCRIBA EL EFECTO: abandonan el estudio, deben recorrer largas distancias]."
+      ],
+      peticiones: [
+        "Informar qué oferta educativa (preescolar, básica, media y técnica) existe para [VEREDA, BARRIO O CORREGIMIENTO].",
+        "Informar si hay programas de transporte o alimentación escolar y cómo acceder a ellos.",
+        "Informar si existe un plan para mejorar la infraestructura o ampliar la oferta, con cronograma y responsable."
+      ],
+      next: "Si se niega un cupo o se afecta el derecho a la educación (artículo 67), puede acudir a una acción de tutela. La Personería o la Defensoría del Pueblo lo orientan gratis.",
+      tip: "Evite escribir nombres de menores de edad en la carta. Use «niñas, niños y jóvenes de la vereda»."
+    },
+    {
+      id: "sustitucion",
+      label: "Información sobre sustitución o PDET",
+      hint: "Programas de sustitución voluntaria y proyectos productivos",
+      dest: "La Agencia de Renovación del Territorio (ART), Dirección de Sustitución de Cultivos de Uso Ilícito",
+      asunto: "Información sobre programas de sustitución voluntaria y proyectos productivos en Tumaco.",
+      hechos: [
+        "[NOS INTERESA / ME INTERESA] conocer los programas de sustitución voluntaria y de desarrollo rural que existen en el municipio de San Andrés de Tumaco."
+      ],
+      peticiones: [
+        "Informar qué programas están vigentes en Tumaco, quiénes pueden participar y qué requisitos se piden.",
+        "Informar qué proyectos productivos y asistencia técnica ofrecen, y cómo se aplica el enfoque étnico y la consulta previa.",
+        "Informar los canales y fechas de atención para presentar solicitudes."
+      ],
+      next: "Puede pedir también apoyo a la Personería o la Defensoría del Pueblo para hacer seguimiento a la respuesta.",
+      tip: "Puede pedir información general sin decir si tiene o no cultivos. No escriba datos que lo comprometan ni los de otras personas."
+    },
+    {
+      id: "obra",
+      label: "Información de una obra pública",
+      hint: "Para una veeduría: contrato, valor, plazo y avance",
+      dest: "La entidad que ejecuta la obra (Alcaldía, Gobernación, ART u otra)",
+      asunto: "Información sobre la obra [NOMBRE DE LA OBRA] en [VEREDA, BARRIO O CORREGIMIENTO].",
+      hechos: [
+        "En [VEREDA, BARRIO O CORREGIMIENTO] se anunció o se está ejecutando la obra [NOMBRE DE LA OBRA].",
+        "[SOMOS UNA VEEDURÍA CIUDADANA INSCRITA EN LA PERSONERÍA / QUEREMOS CONFORMAR UNA VEEDURÍA CIUDADANA] para hacer seguimiento a la obra."
+      ],
+      peticiones: [
+        "Entregar copia del contrato de la obra, con su objeto, valor, plazo, contratista e interventor.",
+        "Informar el cronograma, el porcentaje de avance y las fechas de entrega previstas.",
+        "Entregar copia de los informes de interventoría o supervisión.",
+        "Indicar dónde puede consultar la comunidad los documentos públicos del proceso de contratación."
+      ],
+      next: "Si encuentran irregularidades, pueden llevar el caso, con soportes, a la Contraloría, la Procuraduría o la Fiscalía. Si la entidad no responde, pueden acudir a una acción de tutela por vulneración del derecho de petición.",
+      tip: "Guarde la constancia de radicado de la carta. Es la prueba de la fecha en que se presentó."
+    }
+  ];
+
+  var ROUTES = [
+    { name: "Personería Municipal de Tumaco", what: "Defiende los derechos humanos en el municipio. Recibe quejas, orienta cómo hacer una petición o una tutela, e inscribe las veedurías ciudadanas.", when: "Es el primer lugar al que puede acudir. Vaya si le niegan un derecho, si quiere inscribir una veeduría o si necesita orientación gratuita.", link: "" },
+    { name: "Defensoría del Pueblo", what: "Brinda asesoría gratuita, acompaña tutelas y emite alertas tempranas sobre riesgos para las comunidades. Atiende a víctimas del conflicto.", when: "Cuando hay amenazas o violaciones de derechos humanos, o si necesita ayuda para una tutela.", link: "https://www.defensoria.gov.co" },
+    { name: "Unidad para las Víctimas", what: "Registra a las víctimas del conflicto armado y coordina las medidas de atención y reparación.", when: "Si fue víctima del conflicto y quiere saber cómo registrarse o consultar su caso.", link: "https://www.unidadvictimas.gov.co" },
+    { name: "Agencia de Renovación del Territorio (ART)", what: "Coordina los Programas de Desarrollo con Enfoque Territorial (PDET) y las obras de la Reforma Rural Integral.", when: "Para saber qué obras PDET hay en Tumaco, cómo participar en ellas y cómo estar informado.", link: "https://www.renovacionterritorio.gov.co" },
+    { name: "Agencia Nacional de Tierras (ANT)", what: "Atiende los trámites de formalización de predios y de titulación de territorios colectivos.", when: "Para preguntar por el estado de una solicitud de tierras o de titulación colectiva.", link: "https://www.ant.gov.co" },
+    { name: "Superintendencia de Servicios Públicos Domiciliarios", what: "Vigila a las empresas de agua, alcantarillado, energía y aseo.", when: "Si el servicio es malo, hay cobros que no entiende o la empresa no responde sus reclamos.", link: "https://www.superservicios.gov.co" },
+    { name: "Procuraduría General de la Nación", what: "Vigila la conducta de los funcionarios públicos y puede iniciar investigaciones disciplinarias.", when: "Si un funcionario no cumple sus deberes o actúa de forma irregular.", link: "https://www.procuraduria.gov.co" },
+    { name: "Contraloría General de la República", what: "Vigila cómo se usan los recursos públicos.", when: "Si sospecha que el dinero de una obra o un programa no se está usando bien.", link: "https://www.contraloria.gov.co" },
+    { name: "Fiscalía General de la Nación", what: "Investiga los delitos.", when: "Para denunciar un delito. Si hay peligro inmediato, busque primero a la Policía.", link: "https://www.fiscalia.gov.co" }
+  ];
+
+  var STEPS = [
+    { t: "Escoja qué vigilar", d: "Elija una obra o un servicio concreto: una vía, el acueducto, una escuela o un proyecto PDET o de sustitución. Es más fácil vigilar una cosa a la vez." },
+    { t: "Reúna al grupo", d: "La veeduría la pueden formar ciudadanos u organizaciones: juntas de acción comunal, consejos comunitarios, asociaciones de mujeres, de jóvenes o de víctimas." },
+    { t: "Escriban el acta de constitución", d: "Anoten el nombre de la veeduría, qué van a vigilar, quiénes la integran y qué entidad ejecuta la obra o el servicio." },
+    { t: "Inscríbanla", d: "Lleven el acta a la Personería Municipal o a la Cámara de Comercio para que quede registrada." },
+    { t: "Pidan la información", d: "Con un derecho de petición, pidan el contrato, el valor, el plazo, el contratista y el cronograma. Use la plantilla «Información de una obra pública»." },
+    { t: "Visiten y registren", d: "Revisen en el terreno si lo que dicen los documentos se está cumpliendo. Tomen fotos de la obra, sin personas, y anoten la fecha." },
+    { t: "Informen y denuncien si es necesario", d: "Cuenten los resultados a la comunidad. Si hay irregularidades, lleven el caso con soportes a la Contraloría, la Procuraduría o la Fiscalía." },
+    { t: "Cuiden al grupo", d: "No publiquen en redes los nombres de quienes integran la veeduría. Si reciben amenazas, acudan de inmediato a la Personería o a la Defensoría del Pueblo." }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = text;
+    return e;
+  }
+
+  /* ---- Pestañas ---- */
+  var tabs = [1, 2, 3].map(function (n) { return { tab: $("tab-" + n), panel: $("panel-" + n) }; });
+  function showTab(i) {
+    tabs.forEach(function (t, idx) {
+      var on = idx === i;
+      t.tab.setAttribute("aria-selected", on ? "true" : "false");
+      t.tab.tabIndex = on ? 0 : -1;
+      t.panel.hidden = !on;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    t.tab.addEventListener("click", function () { showTab(i); });
+    t.tab.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") { showTab((i + 1) % 3); tabs[(i + 1) % 3].tab.focus(); }
+      if (e.key === "ArrowLeft") { showTab((i + 2) % 3); tabs[(i + 2) % 3].tab.focus(); }
+    });
+  });
+  showTab(0);
+
+  /* ---- Módulo 1 ---- */
+  var needsBox = $("needs");
+  NEEDS.forEach(function (n) {
+    var label = el("label", "opt");
+    var input = el("input");
+    input.type = "radio";
+    input.name = "need";
+    input.value = n.id;
+    var span = el("span");
+    span.appendChild(document.createTextNode(n.label));
+    span.appendChild(el("small", "", n.hint));
+    label.appendChild(input);
+    label.appendChild(span);
+    needsBox.appendChild(label);
+    input.addEventListener("change", function () { render(n); });
+  });
+
+  function numbered(list) {
+    return list.map(function (x, i) { return (i + 1) + ". " + x; }).join("\n");
+  }
+
+  function buildLetter(n) {
+    return [
+      "[CIUDAD], [FECHA]",
+      "",
+      "Señores",
+      n.dest,
+      "",
+      "Asunto: Derecho de petición (artículo 23 de la Constitución Política y Ley 1755 de 2015). " + n.asunto,
+      "",
+      "Respetados señores:",
+      "",
+      "Yo, [NOMBRE COMPLETO], con documento [TIPO Y NÚMERO], vivo en [VEREDA, BARRIO O CORREGIMIENTO] del municipio de San Andrés de Tumaco. Presento esta petición [EN NOMBRE PROPIO / EN REPRESENTACIÓN DE LA COMUNIDAD U ORGANIZACIÓN] con base en los siguientes hechos:",
+      "",
+      "HECHOS",
+      numbered(n.hechos),
+      "",
+      "PETICIONES",
+      numbered(n.peticiones),
+      "",
+      "Solicito que me respondan dentro de los términos de la Ley 1755 de 2015. Si no es posible responder a tiempo, les pido que me avisen el motivo y la fecha en que responderán.",
+      "",
+      "NOTIFICACIONES: [CORREO ELECTRÓNICO O DIRECCIÓN PARA RECIBIR LA RESPUESTA]",
+      "",
+      "Atentamente,",
+      "",
+      "[FIRMA]",
+      "[NOMBRE COMPLETO]",
+      "[DOCUMENTO]"
+    ].join("\n");
+  }
+
+  function render(n) {
+    $("result").hidden = false;
+    $("r-dest").textContent = n.dest;
+    $("r-next").textContent = n.next;
+    $("r-tip").textContent = n.tip;
+    $("paper").textContent = buildLetter(n);
+    $("status").textContent = "";
+    $("result").scrollIntoView({ block: "nearest" });
+  }
+
+  $("copy").addEventListener("click", function () {
+    var text = $("paper").textContent;
+    var done = function (ok) {
+      $("status").textContent = ok ? "Carta copiada. Péguela en su celular y complete los corchetes." : "No se pudo copiar. Mantenga presionado el texto para copiarlo.";
+    };
+    function fallback() {
+      try {
+        var r = document.createRange();
+        r.selectNodeContents($("paper"));
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        done(document.execCommand("copy"));
+      } catch (e) { done(false); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+    } else { fallback(); }
+  });
+
+  /* ---- Módulo 2 ---- */
+  var routesBox = $("routes");
+  ROUTES.forEach(function (r) {
+    var d = el("details");
+    d.appendChild(el("summary", "", r.name));
+    var body = el("div", "detail-body");
+    var p1 = el("p"); p1.appendChild(el("strong", "", "Qué hace: ")); p1.appendChild(document.createTextNode(r.what));
+    var p2 = el("p"); p2.appendChild(el("strong", "", "Cuándo acudir: ")); p2.appendChild(document.createTextNode(r.when));
+    body.appendChild(p1);
+    body.appendChild(p2);
+    if (r.link) {
+      var p3 = el("p");
+      p3.appendChild(document.createTextNode("Página oficial: "));
+      var a = el("a", "", r.link.replace("https://", ""));
+      a.href = r.link;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      p3.appendChild(a);
+      body.appendChild(p3);
+    } else {
+      body.appendChild(el("p", "", "Pregunte por su sede en el municipio."));
+    }
+    d.appendChild(body);
+    routesBox.appendChild(d);
+  });
+
+  /* ---- Módulo 3 ---- */
+  var stepsBox = $("steps");
+  STEPS.forEach(function (s, i) {
+    var li = el("li");
+    li.appendChild(el("h3", "", s.t));
+    li.appendChild(el("p", "", s.d));
+    var lab = el("label");
+    var cb = el("input");
+    cb.type = "checkbox";
+    cb.id = "step-" + i;
+    lab.appendChild(cb);
+    lab.appendChild(document.createTextNode("Paso listo"));
+    li.appendChild(lab);
+    stepsBox.appendChild(li);
+  });
+
+  $("go-obra").addEventListener("click", function () {
+    showTab(0);
+    var radio = document.querySelector('input[name="need"][value="obra"]');
+    radio.checked = true;
+    render(NEEDS.filter(function (n) { return n.id === "obra"; })[0]);
+    tabs[0].tab.focus();
+  });
+})();
+</script>
+</body>
+</html>
